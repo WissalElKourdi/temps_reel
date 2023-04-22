@@ -58,17 +58,22 @@ public:
      */
     void Join();
     
-   
-    
 private:
     /**********************************************************************/
     /* Shared data                                                        */
     /**********************************************************************/
     ComMonitor monitor;
     ComRobot robot;
+    Camera *camera;
+    Img *image;
     int robotStarted = 0;
-    Img* image;
     int move = MESSAGE_ROBOT_STOP;
+    int CameraOpen;
+    int Bool=0;
+    int cpt=0;
+    Arena savedArena;
+    int stopRobotSearch;
+    bool positionActivated=false;
     
     /**********************************************************************/
     /* Tasks                                                              */
@@ -79,10 +84,13 @@ private:
     RT_TASK th_openComRobot;
     RT_TASK th_startRobot;
     RT_TASK th_move;
+    RT_TASK th_calcul;
     RT_TASK th_getBatteryLevel;
-    RT_TASK th_searchArena ;
-    
-    
+    RT_TASK th_sendImage;
+    RT_TASK th_ArenaSearch;
+    RT_TASK th_startRobotWatchdog;
+    RT_TASK th_reloadWatchdog;
+    RT_TASK th_RobotSearch;
     /**********************************************************************/
     /* Mutex                                                              */
     /**********************************************************************/
@@ -99,8 +107,14 @@ private:
     RT_SEM sem_openComRobot;
     RT_SEM sem_serverOk;
     RT_SEM sem_startRobot;
+    RT_SEM sem_sendImage;
+    RT_SEM sem_CalculPosition;
     RT_SEM sem_getBattery;
-    RT_SEM sem_searchArena;
+    RT_SEM sem_SearchArena;
+    RT_SEM sem_receiveImage;
+    RT_SEM sem_startRobotWatchdog;
+    RT_SEM sem_watchdog;
+    RT_SEM sem_SearchRobot;
 
     /**********************************************************************/
     /* Message queues                                                     */
@@ -111,13 +125,6 @@ private:
     /**********************************************************************/
     /* Tasks' functions                                                   */
     /**********************************************************************/
-     /**
-      * get battery level
-      */
-    void GetBatteryLevel();
-    
-    void ArenaSearch();
-    
     /**
      * @brief Thread handling server communication with the monitor.
      */
@@ -142,6 +149,7 @@ private:
      * @brief Thread starting the communication with the robot.
      */
     void StartRobotTask(void *arg);
+   
     
     /**
      * @brief Thread handling control of the robot.
@@ -164,8 +172,24 @@ private:
      * @return Message read
      */
     Message *ReadInQueue(RT_QUEUE *queue);
-
+    
+    /**
+     * @brief Open camera
+     */
+    void OpenCamera();
+    void CalculPosition();
+    
+    /**
+     * @brief Send image
+     */
+    void sendImage();
+    void CloseCamera();
+    void GetBatteryLevel();
+    void ArenaSearch();
+    Message * CountSendMessage(Message * message);
+    void StartRobotTaskWatchdog(void *arg);
+    void ReloadWatchdog();
+    void RobotSearch();
 };
 
 #endif // __TASKS_H__ 
-
